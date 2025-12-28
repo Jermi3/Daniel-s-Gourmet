@@ -21,9 +21,9 @@ export const useSiteSettings = () => {
 
       // Transform the data into a more usable format
       const settings: SiteSettings = {
-        site_name: data.find(s => s.id === 'site_name')?.value || 'Beracah Cafe',
-        site_logo: data.find(s => s.id === 'site_logo')?.value || '',
-        site_description: data.find(s => s.id === 'site_description')?.value || '',
+        site_name: data.find(s => s.id === 'site_name')?.value || "Daniel's",
+        site_logo: data.find(s => s.id === 'site_logo')?.value || '/daniels-logo.jpg',
+        site_description: data.find(s => s.id === 'site_description')?.value || 'Home of Gourmet Pasta Salad Sandwich Coffee',
         currency: data.find(s => s.id === 'currency')?.value || 'PHP',
         currency_code: data.find(s => s.id === 'currency_code')?.value || 'PHP'
       };
@@ -69,7 +69,7 @@ export const useSiteSettings = () => {
       );
 
       const results = await Promise.all(updatePromises);
-      
+
       // Check for errors
       const errors = results.filter(result => result.error);
       if (errors.length > 0) {

@@ -4,27 +4,30 @@ export default {
   theme: {
     extend: {
       colors: {
-        ramen: {
-          red: '#D7263D',
-          dark: '#0B0A0A',
-          charcoal: '#111113',
-          cream: '#FFF3E0',
-          beige: '#F7E7CE',
-          gold: '#E0A106',
-          sesame: '#D1C7B7',
-          seaweed: '#1F2937',
-          kimchi: '#B81D24'
+        neutral: {
+          850: '#1a1a1a',
+          925: '#0f0f0f',
+          950: '#0a0a0a',
+        },
+        daniels: {
+          highlight: '#2a2a2a', // Dark Gray for subtle highlights
+          dark: '#000000',      // Pure Black
+          charcoal: '#333333',  // Charcoal
+          light: '#f4f4f4',     // Off-white
+          white: '#ffffff',     // Pure White
         }
       },
       fontFamily: {
-        'pretendard': ['Pretendard', 'system-ui', 'sans-serif'],
-        'noto-kr': ['Noto Serif KR', 'serif']
+        'script': ['"Great Vibes"', 'cursive'],
+        'sans': ['"Inter"', 'system-ui', 'sans-serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
         'slide-up': 'slideUp 0.4s ease-out',
         'bounce-gentle': 'bounceGentle 0.6s ease-out',
-        'scale-in': 'scaleIn 0.3s ease-out'
+        'scale-in': 'scaleIn 0.3s ease-out',
+        'glow-pulse': 'glowPulse 2s infinite',
+        'float': 'float 3s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -43,7 +46,19 @@ export default {
         scaleIn: {
           '0%': { transform: 'scale(0.95)', opacity: '0' },
           '100%': { transform: 'scale(1)', opacity: '1' }
+        },
+        glowPulse: {
+          '0%, 100%': { borderColor: 'rgba(255, 255, 255, 0.2)' },
+          '50%': { borderColor: 'rgba(255, 255, 255, 0.6)' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-5px)' },
         }
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'card-gradient': 'linear-gradient(145deg, #131313 0%, #0a0a0a 100%)',
       }
     },
   },

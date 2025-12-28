@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, Users, Calendar } from 'lucide-react';
 import { CartItem, PaymentMethod, ServiceType } from '../types';
 import { usePaymentMethods } from '../hooks/usePaymentMethods';
 
@@ -19,18 +19,15 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   const [landmark, setLandmark] = useState('');
   const [pickupTime, setPickupTime] = useState('5-10');
   const [customTime, setCustomTime] = useState('');
-  // Dine-in specific state
   const [partySize, setPartySize] = useState(1);
   const [dineInTime, setDineInTime] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('gcash');
-  const [referenceNumber, setReferenceNumber] = useState('');
   const [notes, setNotes] = useState('');
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
 
-  // Set default payment method when payment methods are loaded
   React.useEffect(() => {
     if (paymentMethods.length > 0 && !paymentMethod) {
       setPaymentMethod(paymentMethods[0].id as PaymentMethod);
@@ -44,23 +41,23 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   };
 
   const handlePlaceOrder = () => {
-    const timeInfo = serviceType === 'pickup' 
+    const timeInfo = serviceType === 'pickup'
       ? (pickupTime === 'custom' ? customTime : `${pickupTime} minutes`)
       : '';
-    
-    const dineInInfo = serviceType === 'dine-in' 
-      ? `👥 Party Size: ${partySize} person${partySize !== 1 ? 's' : ''}\n🕐 Preferred Time: ${new Date(dineInTime).toLocaleString('en-US', { 
-          weekday: 'long', 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric', 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        })}`
+
+    const dineInInfo = serviceType === 'dine-in'
+      ? `👥 Party Size: ${partySize} person${partySize !== 1 ? 's' : ''}\n🕐 Preferred Time: ${new Date(dineInTime).toLocaleString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })}`
       : '';
-    
+
     const orderDetails = `
-🛒 ClickEats ORDER
+🛒 Daniel's ORDER
 
 👤 Customer: ${customerName}
 📞 Contact: ${contactNumber}
@@ -69,23 +66,22 @@ ${serviceType === 'delivery' ? `🏠 Address: ${address}${landmark ? `\n🗺️ 
 ${serviceType === 'pickup' ? `⏰ Pickup Time: ${timeInfo}` : ''}
 ${serviceType === 'dine-in' ? dineInInfo : ''}
 
-
 📋 ORDER DETAILS:
 ${cartItems.map(item => {
-  let itemDetails = `• ${item.name}`;
-  if (item.selectedVariation) {
-    itemDetails += ` (${item.selectedVariation.name})`;
-  }
-  if (item.selectedAddOns && item.selectedAddOns.length > 0) {
-    itemDetails += ` + ${item.selectedAddOns.map(addOn => 
-      addOn.quantity && addOn.quantity > 1 
-        ? `${addOn.name} x${addOn.quantity}`
-        : addOn.name
-    ).join(', ')}`;
-  }
-  itemDetails += ` x${item.quantity} - ₱${item.totalPrice * item.quantity}`;
-  return itemDetails;
-}).join('\n')}
+      let itemDetails = `• ${item.name}`;
+      if (item.selectedVariation) {
+        itemDetails += ` (${item.selectedVariation.name})`;
+      }
+      if (item.selectedAddOns && item.selectedAddOns.length > 0) {
+        itemDetails += ` + ${item.selectedAddOns.map(addOn =>
+          addOn.quantity && addOn.quantity > 1
+            ? `${addOn.name} x${addOn.quantity}`
+            : addOn.name
+        ).join(', ')}`;
+      }
+      itemDetails += ` x${item.quantity} - ₱${item.totalPrice * item.quantity}`;
+      return itemDetails;
+    }).join('\n')}
 
 💰 TOTAL: ₱${totalPrice}
 ${serviceType === 'delivery' ? `🛵 DELIVERY FEE:` : ''}
@@ -95,240 +91,163 @@ ${serviceType === 'delivery' ? `🛵 DELIVERY FEE:` : ''}
 
 ${notes ? `📝 Notes: ${notes}` : ''}
 
-Please confirm this order to proceed. Thank you for choosing ClickEats! 🥟
+Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
     `.trim();
 
     const encodedMessage = encodeURIComponent(orderDetails);
     const messengerUrl = `https://m.me/61579693577478?text=${encodedMessage}`;
-    
+
     window.open(messengerUrl, '_blank');
-    
   };
 
-  const isDetailsValid = customerName && contactNumber && 
-    (serviceType !== 'delivery' || address) && 
+  const isDetailsValid = customerName && contactNumber &&
+    (serviceType !== 'delivery' || address) &&
     (serviceType !== 'pickup' || (pickupTime !== 'custom' || customTime)) &&
     (serviceType !== 'dine-in' || (partySize > 0 && dineInTime));
 
-  if (step === 'details') {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center mb-8">
-          <button
-            onClick={onBack}
-            className="flex items-center space-x-2 text-gray-600 hover:text-black transition-colors duration-200"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            <span>Back to Cart</span>
-          </button>
-          <h1 className="text-3xl font-noto font-semibold text-black ml-8">Order Details</h1>
-        </div>
+  const InputField = ({ label, type = "text", value, onChange, placeholder, required = false }: any) => (
+    <div className="group">
+      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-hover:text-white transition-colors">{label} {required && '*'}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        className="w-full bg-black/40 border border-white/10 rounded-none px-4 py-3 text-white placeholder-gray-600 focus:border-white focus:ring-1 focus:ring-white transition-all duration-300"
+        placeholder={placeholder}
+        required={required}
+      />
+    </div>
+  );
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Order Summary */}
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-2xl font-noto font-medium text-black mb-6">Order Summary</h2>
-            
-            <div className="space-y-4 mb-6">
-              {cartItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between py-2 border-b border-red-100">
-                  <div>
-                    <h4 className="font-medium text-black">{item.name}</h4>
-                    {item.selectedVariation && (
-                      <p className="text-sm text-gray-600">Size: {item.selectedVariation.name}</p>
-                    )}
-                    {item.selectedAddOns && item.selectedAddOns.length > 0 && (
-                      <p className="text-sm text-gray-600">
-                        Add-ons: {item.selectedAddOns.map(addOn => addOn.name).join(', ')}
-                      </p>
-                    )}
-                    <p className="text-sm text-gray-600">₱{item.totalPrice} x {item.quantity}</p>
-                  </div>
-                  <span className="font-semibold text-black">₱{item.totalPrice * item.quantity}</span>
-                </div>
-              ))}
-            </div>
-            
-            <div className="border-t border-red-200 pt-4">
-              <div className="flex items-center justify-between text-2xl font-noto font-semibold text-black">
-                <span>Total:</span>
-                <span>₱{totalPrice}</span>
-              </div>
-            </div>
-          </div>
+  return (
+    <div className="max-w-5xl mx-auto px-4 py-12">
+      <div className="flex items-center mb-12">
+        <button
+          onClick={step === 'payment' ? () => setStep('details') : onBack}
+          className="flex items-center space-x-2 text-gray-400 hover:text-white transition-all duration-300 group"
+        >
+          <ArrowLeft className="h-5 w-5 transform group-hover:-translate-x-1 transition-transform" />
+          <span className="uppercase tracking-wider text-sm">{step === 'payment' ? 'Back to Details' : 'Back to Cart'}</span>
+        </button>
+        <h1 className="text-4xl font-script text-white text-shadow-sm ml-8">{step === 'details' ? 'Order Details' : 'Payment'}</h1>
+      </div>
 
-          {/* Customer Details Form */}
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <h2 className="text-2xl font-noto font-medium text-black mb-6">Customer Information</h2>
-            
-            <form className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        {/* Main Content Area */}
+        <div className="lg:col-span-7 space-y-8">
+          {step === 'details' ? (
+            <div className="space-y-8">
               {/* Customer Information */}
-              <div>
-                <label className="block text-sm font-medium text-black mb-2">Full Name *</label>
-                <input
-                  type="text"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className="w-full px-4 py-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter your full name"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-black mb-2">Contact Number *</label>
-                <input
-                  type="tel"
-                  value={contactNumber}
-                  onChange={(e) => setContactNumber(e.target.value)}
-                  className="w-full px-4 py-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
-                  placeholder="09XX XXX XXXX"
-                  required
-                />
+              <div className="card-premium p-8">
+                <h2 className="text-xl font-light text-white uppercase tracking-widest mb-8 flex items-center">
+                  <span className="w-8 h-px bg-white/30 mr-4"></span>
+                  Information
+                </h2>
+                <div className="space-y-6">
+                  <InputField label="Full Name" value={customerName} onChange={(e: any) => setCustomerName(e.target.value)} placeholder="Enter your full name" required />
+                  <InputField label="Contact Number" type="tel" value={contactNumber} onChange={(e: any) => setContactNumber(e.target.value)} placeholder="09XX XXX XXXX" required />
+                </div>
               </div>
 
               {/* Service Type */}
-              <div>
-                <label className="block text-sm font-medium text-black mb-3">Service Type *</label>
-                <div className="grid grid-cols-3 gap-3">
+              <div className="card-premium p-8">
+                <h2 className="text-xl font-light text-white uppercase tracking-widest mb-8 flex items-center">
+                  <span className="w-8 h-px bg-white/30 mr-4"></span>
+                  Service Method
+                </h2>
+
+                <div className="grid grid-cols-3 gap-4 mb-8">
                   {[
-                    { value: 'dine-in', label: 'Dine In', icon: '🪑' },
-                    { value: 'pickup', label: 'Pickup', icon: '🚶' },
-                    { value: 'delivery', label: 'Delivery', icon: '🛵' }
+                    { value: 'dine-in', label: 'Dine In', icon: <Users className="w-5 h-5" /> },
+                    { value: 'pickup', label: 'Pickup', icon: <Clock className="w-5 h-5" /> },
+                    { value: 'delivery', label: 'Delivery', icon: <MapPin className="w-5 h-5" /> }
                   ].map((option) => (
                     <button
                       key={option.value}
                       type="button"
                       onClick={() => setServiceType(option.value as ServiceType)}
-                      className={`p-4 rounded-lg border-2 transition-all duration-200 ${
-                        serviceType === option.value
-                          ? 'border-red-600 bg-red-600 text-white'
-                          : 'border-red-300 bg-white text-gray-700 hover:border-red-400'
-                      }`}
+                      className={`p-4 border transition-all duration-300 flex flex-col items-center justify-center gap-3 relative overflow-hidden group ${serviceType === option.value
+                          ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.15)]'
+                          : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:text-white hover:bg-white/5'
+                        }`}
                     >
-                      <div className="text-2xl mb-1">{option.icon}</div>
-                      <div className="text-sm font-medium">{option.label}</div>
+                      {option.icon}
+                      <span className="text-xs font-bold uppercase tracking-wider">{option.label}</span>
+                      {serviceType === option.value && (
+                        <div className="absolute inset-0 bg-gradient-to-tr from-gray-200 to-white opacity-20" />
+                      )}
                     </button>
                   ))}
                 </div>
-              </div>
 
-              {/* Dine-in Details */}
-              {serviceType === 'dine-in' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-black mb-2">Party Size *</label>
-                    <div className="flex items-center space-x-4">
-                      <button
-                        type="button"
-                        onClick={() => setPartySize(Math.max(1, partySize - 1))}
-                        className="w-10 h-10 rounded-lg border-2 border-red-300 flex items-center justify-center text-red-600 hover:border-red-400 hover:bg-red-50 transition-all duration-200"
-                      >
-                        -
-                      </button>
-                      <span className="text-2xl font-semibold text-black min-w-[3rem] text-center">{partySize}</span>
-                      <button
-                        type="button"
-                        onClick={() => setPartySize(Math.min(20, partySize + 1))}
-                        className="w-10 h-10 rounded-lg border-2 border-red-300 flex items-center justify-center text-red-600 hover:border-red-400 hover:bg-red-50 transition-all duration-200"
-                      >
-                        +
-                      </button>
-                      <span className="text-sm text-gray-600 ml-2">person{partySize !== 1 ? 's' : ''}</span>
+                {serviceType === 'dine-in' && (
+                  <div className="space-y-6 animate-fade-in pl-4 border-l border-white/10">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Party Size</label>
+                      <div className="flex items-center bg-black border border-white/20 w-fit p-1">
+                        <button onClick={() => setPartySize(Math.max(1, partySize - 1))} className="p-3 hover:bg-white/10 text-white transition-colors"><Minus className="h-4 w-4" /></button>
+                        <span className="font-bold text-white min-w-[3rem] text-center">{partySize}</span>
+                        <button onClick={() => setPartySize(Math.min(20, partySize + 1))} className="p-3 hover:bg-white/10 text-white transition-colors"><Plus className="h-4 w-4" /></button>
+                      </div>
                     </div>
+                    <InputField label="Preferred Time" type="datetime-local" value={dineInTime} onChange={(e: any) => setDineInTime(e.target.value)} required />
                   </div>
+                )}
 
-                  <div>
-                    <label className="block text-sm font-medium text-black mb-2">Preferred Time *</label>
-                    <input
-                      type="datetime-local"
-                      value={dineInTime}
-                      onChange={(e) => setDineInTime(e.target.value)}
-                      className="w-full px-4 py-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
-                      required
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Please select your preferred dining time</p>
-                  </div>
-                </>
-              )}
-
-              {/* Pickup Time Selection */}
-              {serviceType === 'pickup' && (
-                <div>
-                  <label className="block text-sm font-medium text-black mb-3">Pickup Time *</label>
-                  <div className="space-y-3">
+                {serviceType === 'pickup' && (
+                  <div className="space-y-6 animate-fade-in pl-4 border-l border-white/10">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Pickup Time</label>
                     <div className="grid grid-cols-2 gap-3">
                       {[
-                        { value: '5-10', label: '5-10 minutes' },
-                        { value: '15-20', label: '15-20 minutes' },
-                        { value: '25-30', label: '25-30 minutes' },
-                        { value: 'custom', label: 'Custom Time' }
+                        { value: '5-10', label: '5-10 mins' },
+                        { value: '15-20', label: '15-20 mins' },
+                        { value: '25-30', label: '25-30 mins' },
+                        { value: 'custom', label: 'Custom' }
                       ].map((option) => (
                         <button
                           key={option.value}
                           type="button"
                           onClick={() => setPickupTime(option.value)}
-                          className={`p-3 rounded-lg border-2 transition-all duration-200 text-sm ${
-                            pickupTime === option.value
-                              ? 'border-red-600 bg-red-600 text-white'
-                              : 'border-red-300 bg-white text-gray-700 hover:border-red-400'
-                          }`}
+                          className={`p-3 text-sm border transition-all duration-300 ${pickupTime === option.value
+                              ? 'bg-white text-black border-white'
+                              : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30'
+                            }`}
                         >
-                          <Clock className="h-4 w-4 mx-auto mb-1" />
                           {option.label}
                         </button>
                       ))}
                     </div>
-                    
                     {pickupTime === 'custom' && (
-                      <input
-                        type="text"
-                        value={customTime}
-                        onChange={(e) => setCustomTime(e.target.value)}
-                        className="w-full px-4 py-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
-                        placeholder="e.g., 45 minutes, 1 hour, 2:30 PM"
-                        required
-                      />
+                      <InputField value={customTime} onChange={(e: any) => setCustomTime(e.target.value)} placeholder="e.g., 45 minutes, 1 hour, 2:30 PM" required />
                     )}
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Delivery Address */}
-              {serviceType === 'delivery' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-black mb-2">Delivery Address *</label>
-                    <textarea
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      className="w-full px-4 py-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
-                      placeholder="Enter your complete delivery address"
-                      rows={3}
-                      required
-                    />
+                {serviceType === 'delivery' && (
+                  <div className="space-y-6 animate-fade-in pl-4 border-l border-white/10">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Delivery Address *</label>
+                      <textarea
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        className="w-full bg-black/40 border border-white/10 px-4 py-3 text-white placeholder-gray-600 focus:border-white focus:ring-1 focus:ring-white transition-all duration-300"
+                        placeholder="Enter your complete delivery address"
+                        rows={3}
+                        required
+                      />
+                    </div>
+                    <InputField label="Landmark" value={landmark} onChange={(e: any) => setLandmark(e.target.value)} placeholder="e.g., Near McDonald's" />
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-black mb-2">Landmark</label>
-                    <input
-                      type="text"
-                      value={landmark}
-                      onChange={(e) => setLandmark(e.target.value)}
-                      className="w-full px-4 py-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
-                      placeholder="e.g., Near McDonald's, Beside 7-Eleven, In front of school"
-                    />
-                  </div>
-                </>
-              )}
+                )}
+              </div>
 
-              {/* Special Notes */}
-              <div>
-                <label className="block text-sm font-medium text-black mb-2">Special Instructions</label>
+              {/* Notes */}
+              <div className="card-premium p-8">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Special Instructions</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full px-4 py-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
+                  className="w-full bg-black/40 border border-white/10 px-4 py-3 text-white placeholder-gray-600 focus:border-white focus:ring-1 focus:ring-white transition-all duration-300"
                   placeholder="Any special requests or notes..."
                   rows={3}
                 />
@@ -337,173 +256,131 @@ Please confirm this order to proceed. Thank you for choosing ClickEats! 🥟
               <button
                 onClick={handleProceedToPayment}
                 disabled={!isDetailsValid}
-                className={`w-full py-4 rounded-xl font-medium text-lg transition-all duration-200 transform ${
-                  isDetailsValid
-                    ? 'bg-red-600 text-white hover:bg-red-700 hover:scale-[1.02]'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
+                className={`w-full py-4 text-sm font-bold uppercase tracking-[0.2em] transition-all duration-300 shadow-lg ${isDetailsValid
+                    ? 'bg-white text-black hover:bg-gray-200 hover:shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:scale-[1.01]'
+                    : 'bg-neutral-800 text-gray-500 cursor-not-allowed border border-white/5'
+                  }`}
               >
                 Proceed to Payment
               </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    );
-  }
+            </div>
+          ) : (
+            <div className="space-y-8 animate-slide-up">
+              <div className="card-premium p-8">
+                <h2 className="text-xl font-light text-white uppercase tracking-widest mb-8 flex items-center">
+                  <span className="w-8 h-px bg-white/30 mr-4"></span>
+                  Payment Method
+                </h2>
 
-  // Payment Step
-  return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center mb-8">
-        <button
-          onClick={() => setStep('details')}
-          className="flex items-center space-x-2 text-gray-600 hover:text-black transition-colors duration-200"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          <span>Back to Details</span>
-        </button>
-        <h1 className="text-3xl font-noto font-semibold text-black ml-8">Payment</h1>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Payment Method Selection */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-2xl font-noto font-medium text-black mb-6">Choose Payment Method</h2>
-          
-          <div className="grid grid-cols-1 gap-4 mb-6">
-            {paymentMethods.map((method) => (
-              <button
-                key={method.id}
-                type="button"
-                onClick={() => setPaymentMethod(method.id as PaymentMethod)}
-                className={`p-4 rounded-lg border-2 transition-all duration-200 flex items-center space-x-3 ${
-                  paymentMethod === method.id
-                    ? 'border-red-600 bg-red-600 text-white'
-                    : 'border-red-300 bg-white text-gray-700 hover:border-red-400'
-                }`}
-              >
-                <span className="text-2xl">💳</span>
-                <span className="font-medium">{method.name}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Payment Details with QR Code */}
-          {selectedPaymentMethod && (
-            <div className="bg-red-50 rounded-lg p-6 mb-6">
-              <h3 className="font-medium text-black mb-4">Payment Details</h3>
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div className="flex-1">
-                  <p className="text-sm text-gray-600 mb-1">{selectedPaymentMethod.name}</p>
-                  <p className="font-mono text-black font-medium">{selectedPaymentMethod.account_number}</p>
-                  <p className="text-sm text-gray-600 mb-3">Account Name: {selectedPaymentMethod.account_name}</p>
-                  <p className="text-xl font-semibold text-black">Amount: ₱{totalPrice}</p>
+                <div className="grid grid-cols-1 gap-4 mb-8">
+                  {paymentMethods.map((method) => (
+                    <button
+                      key={method.id}
+                      type="button"
+                      onClick={() => setPaymentMethod(method.id as PaymentMethod)}
+                      className={`p-6 border transition-all duration-300 flex items-center space-x-6 group ${paymentMethod === method.id
+                          ? 'bg-white/10 border-white text-white shadow-[0_0_20px_rgba(255,255,255,0.05)]'
+                          : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:bg-white/5'
+                        }`}
+                    >
+                      <span className="text-3xl filter grayscale group-hover:grayscale-0 transition-all">💳</span>
+                      <div className="text-left">
+                        <div className={`font-bold uppercase tracking-wider text-sm ${paymentMethod === method.id ? 'text-white' : 'text-gray-300'}`}>{method.name}</div>
+                        <div className="text-xs text-gray-500 mt-1">Scan QR code to pay</div>
+                      </div>
+                    </button>
+                  ))}
                 </div>
-                <div className="flex-shrink-0">
-                  <img 
-                    src={selectedPaymentMethod.qr_code_url} 
-                    alt={`${selectedPaymentMethod.name} QR Code`}
-                    className="w-32 h-32 rounded-lg border-2 border-red-300 shadow-sm"
-                    onError={(e) => {
-                      e.currentTarget.src = 'https://images.pexels.com/photos/8867482/pexels-photo-8867482.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop';
-                    }}
-                  />
-                  <p className="text-xs text-gray-500 text-center mt-2">Scan to pay</p>
+
+                {selectedPaymentMethod && (
+                  <div className="bg-neutral-900 border border-white/10 p-8 flex flex-col md:flex-row items-center gap-8 animate-fade-in relative overflow-hidden">
+                    {/* Decorative glow */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 blur-3xl rounded-full"></div>
+
+                    <div className="flex-1 space-y-2 relative z-10">
+                      <p className="text-xs text-gray-500 uppercase tracking-widest">Account Details</p>
+                      <p className="font-mono text-xl text-white tracking-wider">{selectedPaymentMethod.account_number}</p>
+                      <p className="text-sm text-gray-400">{selectedPaymentMethod.account_name}</p>
+                      <div className="pt-4 mt-4 border-t border-white/5">
+                        <p className="text-xs text-gray-500 uppercase tracking-widest mb-1">Total Amount</p>
+                        <p className="text-2xl font-bold text-white">₱{totalPrice.toFixed(2)}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex-shrink-0 relative group">
+                      <div className="absolute inset-0 bg-white/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                      <img
+                        src={selectedPaymentMethod.qr_code_url}
+                        alt="QR Code"
+                        className="w-40 h-40 border border-white/20 p-2 bg-white relative z-10"
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://images.pexels.com/photos/8867482/pexels-photo-8867482.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop';
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white/5 border border-white/10 p-4 flex items-start space-x-3">
+                <span className="text-xl">📸</span>
+                <div>
+                  <h4 className="text-sm font-bold text-white uppercase tracking-wide mb-1">Payment Proof Required</h4>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    After making your payment, please take a screenshot of your receipt. You will need to attach it when confirming your order via Messenger.
+                  </p>
                 </div>
               </div>
+
+              <button
+                onClick={handlePlaceOrder}
+                className="w-full bg-white text-black py-4 font-bold text-lg uppercase tracking-[0.15em] hover:bg-gray-200 transition-all duration-300 shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:shadow-[0_0_50px_rgba(255,255,255,0.25)] hover:scale-[1.01]"
+              >
+                Place Order via Messenger
+              </button>
             </div>
           )}
-
-          {/* Reference Number */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h4 className="font-medium text-black mb-2">📸 Payment Proof Required</h4>
-            <p className="text-sm text-gray-700">
-              After making your payment, please take a screenshot of your payment receipt and attach it when you send your order via Messenger. This helps us verify and process your order quickly.
-            </p>
-          </div>
         </div>
 
-        {/* Order Summary */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h2 className="text-2xl font-noto font-medium text-black mb-6">Final Order Summary</h2>
-          
-          <div className="space-y-4 mb-6">
-            <div className="bg-red-50 rounded-lg p-4">
-              <h4 className="font-medium text-black mb-2">Customer Details</h4>
-              <p className="text-sm text-gray-600">Name: {customerName}</p>
-              <p className="text-sm text-gray-600">Contact: {contactNumber}</p>
-              <p className="text-sm text-gray-600">Service: {serviceType.charAt(0).toUpperCase() + serviceType.slice(1)}</p>
-              {serviceType === 'delivery' && (
-                <>
-                  <p className="text-sm text-gray-600">Address: {address}</p>
-                  {landmark && <p className="text-sm text-gray-600">Landmark: {landmark}</p>}
-                </>
-              )}
-              {serviceType === 'pickup' && (
-                <p className="text-sm text-gray-600">
-                  Pickup Time: {pickupTime === 'custom' ? customTime : `${pickupTime} minutes`}
-                </p>
-              )}
-              {serviceType === 'dine-in' && (
-                <>
-                  <p className="text-sm text-gray-600">
-                    Party Size: {partySize} person{partySize !== 1 ? 's' : ''}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Preferred Time: {dineInTime ? new Date(dineInTime).toLocaleString('en-US', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric', 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    }) : 'Not selected'}
-                  </p>
-                </>
-              )}
-            </div>
+        {/* Sidebar Summary */}
+        <div className="lg:col-span-5">
+          <div className="sticky top-28 card-premium p-8">
+            <h2 className="text-xl font-light text-white uppercase tracking-widest mb-6">Order Summary</h2>
 
-            {cartItems.map((item) => (
-              <div key={item.id} className="flex items-center justify-between py-2 border-b border-red-100">
-                <div>
-                  <h4 className="font-medium text-black">{item.name}</h4>
-                  {item.selectedVariation && (
-                    <p className="text-sm text-gray-600">Size: {item.selectedVariation.name}</p>
-                  )}
-                  {item.selectedAddOns && item.selectedAddOns.length > 0 && (
-                    <p className="text-sm text-gray-600">
-                      Add-ons: {item.selectedAddOns.map(addOn => 
-                        addOn.quantity && addOn.quantity > 1 
-                          ? `${addOn.name} x${addOn.quantity}`
-                          : addOn.name
-                      ).join(', ')}
-                    </p>
-                  )}
-                  <p className="text-sm text-gray-600">₱{item.totalPrice} x {item.quantity}</p>
+            <div className="space-y-4 mb-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+              {cartItems.map((item) => (
+                <div key={item.id} className="flex justify-between py-3 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors p-2 -mx-2 rounded-sm">
+                  <div className="flex-1 pr-4">
+                    <div className="flex justify-between mb-1">
+                      <h4 className="font-medium text-white text-sm">{item.name}</h4>
+                      <span className="text-white text-sm">₱{(item.totalPrice * item.quantity).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>x{item.quantity} {item.selectedVariation && `• ${item.selectedVariation.name}`}</span>
+                      <span>₱{item.totalPrice.toFixed(2)} ea</span>
+                    </div>
+                  </div>
                 </div>
-                <span className="font-semibold text-black">₱{item.totalPrice * item.quantity}</span>
+              ))}
+            </div>
+
+            <div className="pt-6 border-t border-white/10 space-y-3">
+              <div className="flex justify-between text-gray-400 text-sm">
+                <span>Subtotal</span>
+                <span>₱{totalPrice.toFixed(2)}</span>
               </div>
-            ))}
-          </div>
-          
-          <div className="border-t border-red-200 pt-4 mb-6">
-            <div className="flex items-center justify-between text-2xl font-noto font-semibold text-black">
-              <span>Total:</span>
-              <span>₱{totalPrice}</span>
+              {serviceType === 'delivery' && (
+                <div className="flex justify-between text-gray-400 text-sm">
+                  <span>Delivery Fee</span>
+                  <span className="text-xs uppercase border border-white/10 px-2 py-0.5 rounded-sm">Calculated on Messenger</span>
+                </div>
+              )}
+              <div className="flex justify-between text-white text-xl font-bold mt-4 pt-4 border-t border-white/10">
+                <span>Total</span>
+                <span>₱{totalPrice.toFixed(2)}</span>
+              </div>
             </div>
           </div>
-
-          <button
-            onClick={handlePlaceOrder}
-            className="w-full py-4 rounded-xl font-medium text-lg transition-all duration-200 transform bg-red-600 text-white hover:bg-red-700 hover:scale-[1.02]"
-          >
-            Place Order via Messenger
-          </button>
-          
-          <p className="text-xs text-gray-500 text-center mt-3">
-            You'll be redirected to Facebook Messenger to confirm your order. Don't forget to attach your payment screenshot!
-          </p>
         </div>
       </div>
     </div>
