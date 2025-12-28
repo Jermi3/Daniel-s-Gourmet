@@ -75,3 +75,36 @@ export interface SiteSettings {
   currency: string;
   currency_code: string;
 }
+
+// Order Management Types
+export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'completed' | 'cancelled';
+
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  item_name: string;
+  variation_name?: string;
+  add_ons: Array<{ name: string; quantity?: number }>;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  created_at: string;
+}
+
+export interface Order {
+  id: string;
+  customer_name: string;
+  contact_number: string;
+  service_type: ServiceType;
+  address?: string;
+  landmark?: string;
+  party_size?: number;
+  preferred_time?: string;
+  payment_method: string;
+  notes?: string;
+  total: number;
+  status: OrderStatus;
+  created_at: string;
+  updated_at: string;
+  items?: OrderItem[];
+}

@@ -8,10 +8,10 @@ interface ImageUploadProps {
   className?: string;
 }
 
-const ImageUpload: React.FC<ImageUploadProps> = ({ 
-  currentImage, 
-  onImageChange, 
-  className = '' 
+const ImageUpload: React.FC<ImageUploadProps> = ({
+  currentImage,
+  onImageChange,
+  className = ''
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { uploadImage, deleteImage, uploading, uploadProgress } = useImageUpload();
@@ -53,7 +53,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   return (
     <div className={`space-y-4 ${className}`}>
       <label className="block text-sm font-medium text-black mb-2">Menu Item Image</label>
-      
+
       {currentImage ? (
         <div className="relative">
           <img
@@ -89,7 +89,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-2"></div>
               <p className="text-sm text-gray-600">Uploading... {uploadProgress}%</p>
               <div className="w-32 bg-gray-200 rounded-full h-2 mt-2">
-                <div 
+                <div
                   className="bg-black h-2 rounded-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
@@ -136,7 +136,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           type="url"
           value={currentImage || ''}
           onChange={(e) => onImageChange(e.target.value || undefined)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent text-gray-900"
           placeholder="https://example.com/image.jpg"
           disabled={uploading}
         />

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Save, X, ArrowLeft, Coffee, TrendingUp, Package, Users, Lock, FolderOpen, CreditCard, Settings } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, ArrowLeft, Coffee, TrendingUp, Package, Users, Lock, FolderOpen, CreditCard, Settings, ClipboardList } from 'lucide-react';
 import { MenuItem, Variation, AddOn } from '../types';
 import { addOnCategories } from '../data/menuData';
 import { useMenu } from '../hooks/useMenu';
@@ -8,6 +8,7 @@ import ImageUpload from './ImageUpload';
 import CategoryManager from './CategoryManager';
 import PaymentMethodManager from './PaymentMethodManager';
 import SiteSettingsManager from './SiteSettingsManager';
+import OrderManager from './OrderManager';
 
 const AdminDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -17,7 +18,7 @@ const AdminDashboard: React.FC = () => {
   const [loginError, setLoginError] = useState('');
   const { menuItems, loading, addMenuItem, updateMenuItem, deleteMenuItem } = useMenu();
   const { categories } = useCategories();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'items' | 'add' | 'edit' | 'categories' | 'payments' | 'settings' | 'orders'>('dashboard');
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -897,6 +898,11 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
+  // Orders View
+  if (currentView === 'orders') {
+    return <OrderManager onBack={() => setCurrentView('dashboard')} />;
+  }
+
   // Categories View
   if (currentView === 'categories') {
     return <CategoryManager onBack={() => setCurrentView('dashboard')} />;
@@ -1026,6 +1032,13 @@ const AdminDashboard: React.FC = () => {
               >
                 <Plus className="h-5 w-5 text-gray-400" />
                 <span className="font-medium text-gray-900">Add New Menu Item</span>
+              </button>
+              <button
+                onClick={() => setCurrentView('orders')}
+                className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-50 rounded-lg transition-colors duration-200"
+              >
+                <ClipboardList className="h-5 w-5 text-gray-400" />
+                <span className="font-medium text-gray-900">Manage Orders</span>
               </button>
               <button
                 onClick={() => setCurrentView('items')}

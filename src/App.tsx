@@ -75,6 +75,10 @@ function MainApp() {
             cartItems={cart.cartItems}
             totalPrice={cart.getTotalPrice()}
             onBack={() => handleViewChange('cart')}
+            onOrderComplete={() => {
+              cart.clearCart();
+              handleViewChange('menu');
+            }}
           />
         )}
       </div>

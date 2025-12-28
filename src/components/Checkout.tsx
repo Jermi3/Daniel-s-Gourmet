@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Clock, MapPin, Users, Calendar } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, Users } from 'lucide-react';
 import { CartItem, PaymentMethod, ServiceType } from '../types';
 import { usePaymentMethods } from '../hooks/usePaymentMethods';
+import { supabase } from '../lib/supabase';
 
 interface CheckoutProps {
   cartItems: CartItem[];
   totalPrice: number;
   onBack: () => void;
+  onOrderComplete: () => void;
 }
 
-const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) => {
+const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onOrderComplete }) => {
   const { paymentMethods } = usePaymentMethods();
   const [step, setStep] = useState<'details' | 'payment'>('details');
   const [customerName, setCustomerName] = useState('');
@@ -23,6 +25,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
   const [dineInTime, setDineInTime] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('gcash');
   const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -40,7 +43,10 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
     setStep('payment');
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
+    if (isSubmitting) return; // Prevent double submission
+    setIsSubmitting(true);
+
     const timeInfo = serviceType === 'pickup'
       ? (pickupTime === 'custom' ? customTime : `${pickupTime} minutes`)
       : '';
@@ -55,6 +61,60 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
         minute: '2-digit'
       })}`
       : '';
+
+    // Save order to database
+    try {
+      const preferredTime = serviceType === 'dine-in'
+        ? dineInTime
+        : serviceType === 'pickup'
+          ? timeInfo
+          : undefined;
+
+      // Insert order
+      const { data: newOrder, error: orderError } = await supabase
+        .from('orders')
+        .insert([{
+          customer_name: customerName,
+          contact_number: contactNumber,
+          service_type: serviceType,
+          address: serviceType === 'delivery' ? address : null,
+          landmark: serviceType === 'delivery' ? landmark : null,
+          party_size: serviceType === 'dine-in' ? partySize : null,
+          preferred_time: preferredTime,
+          payment_method: selectedPaymentMethod?.name || paymentMethod,
+          notes: notes || null,
+          total: totalPrice,
+          status: 'pending'
+        }])
+        .select()
+        .single();
+
+      if (orderError) {
+        console.error('Error saving order:', orderError);
+      } else if (newOrder) {
+        // Insert order items
+        const orderItems = cartItems.map(item => ({
+          order_id: newOrder.id,
+          item_name: item.name,
+          variation_name: item.selectedVariation?.name || null,
+          add_ons: item.selectedAddOns?.map(a => ({ name: a.name, quantity: a.quantity || 1 })) || [],
+          quantity: item.quantity,
+          unit_price: item.totalPrice,
+          total_price: item.totalPrice * item.quantity
+        }));
+
+        const { error: itemsError } = await supabase
+          .from('order_items')
+          .insert(orderItems);
+
+        if (itemsError) {
+          console.error('Error saving order items:', itemsError);
+        }
+      }
+    } catch (err) {
+      console.error('Error saving order to database:', err);
+      // Continue with Messenger even if database save fails
+    }
 
     const orderDetails = `
 🛒 Daniel's ORDER
@@ -95,29 +155,18 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
     `.trim();
 
     const encodedMessage = encodeURIComponent(orderDetails);
-    const messengerUrl = `https://m.me/61579693577478?text=${encodedMessage}`;
+    const messengerUrl = `https://m.me/DanielsSLK?text=${encodedMessage}`;
 
     window.open(messengerUrl, '_blank');
+
+    // Clear cart and go back to menu
+    onOrderComplete();
   };
 
   const isDetailsValid = customerName && contactNumber &&
     (serviceType !== 'delivery' || address) &&
-    (serviceType !== 'pickup' || (pickupTime !== 'custom' || customTime)) &&
-    (serviceType !== 'dine-in' || (partySize > 0 && dineInTime));
+    (serviceType !== 'pickup' || (pickupTime !== 'custom' || customTime));
 
-  const InputField = ({ label, type = "text", value, onChange, placeholder, required = false }: any) => (
-    <div className="group">
-      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-hover:text-white transition-colors">{label} {required && '*'}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={onChange}
-        className="w-full bg-black/40 border border-white/10 rounded-none px-4 py-3 text-white placeholder-gray-600 focus:border-white focus:ring-1 focus:ring-white transition-all duration-300"
-        placeholder={placeholder}
-        required={required}
-      />
-    </div>
-  );
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
@@ -144,8 +193,32 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
                   Information
                 </h2>
                 <div className="space-y-6">
-                  <InputField label="Full Name" value={customerName} onChange={(e: any) => setCustomerName(e.target.value)} placeholder="Enter your full name" required />
-                  <InputField label="Contact Number" type="tel" value={contactNumber} onChange={(e: any) => setContactNumber(e.target.value)} placeholder="09XX XXX XXXX" required />
+                  <div className="group">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-hover:text-white transition-colors">Full Name *</label>
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="w-full bg-black/40 border border-white/10 rounded-none px-4 py-3 text-white placeholder-gray-600 focus:border-white focus:ring-1 focus:ring-white transition-all duration-300"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                  <div className="group">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-hover:text-white transition-colors">Contact Number *</label>
+                    <input
+                      type="tel"
+                      value={contactNumber}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, '');
+                        setContactNumber(value);
+                      }}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={11}
+                      className="w-full bg-black/40 border border-white/10 rounded-none px-4 py-3 text-white placeholder-gray-600 focus:border-white focus:ring-1 focus:ring-white transition-all duration-300"
+                      placeholder="09XX XXX XXXX"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -167,8 +240,8 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
                       type="button"
                       onClick={() => setServiceType(option.value as ServiceType)}
                       className={`p-4 border transition-all duration-300 flex flex-col items-center justify-center gap-3 relative overflow-hidden group ${serviceType === option.value
-                          ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.15)]'
-                          : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:text-white hover:bg-white/5'
+                        ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.15)]'
+                        : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:text-white hover:bg-white/5'
                         }`}
                     >
                       {option.icon}
@@ -180,19 +253,6 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
                   ))}
                 </div>
 
-                {serviceType === 'dine-in' && (
-                  <div className="space-y-6 animate-fade-in pl-4 border-l border-white/10">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Party Size</label>
-                      <div className="flex items-center bg-black border border-white/20 w-fit p-1">
-                        <button onClick={() => setPartySize(Math.max(1, partySize - 1))} className="p-3 hover:bg-white/10 text-white transition-colors"><Minus className="h-4 w-4" /></button>
-                        <span className="font-bold text-white min-w-[3rem] text-center">{partySize}</span>
-                        <button onClick={() => setPartySize(Math.min(20, partySize + 1))} className="p-3 hover:bg-white/10 text-white transition-colors"><Plus className="h-4 w-4" /></button>
-                      </div>
-                    </div>
-                    <InputField label="Preferred Time" type="datetime-local" value={dineInTime} onChange={(e: any) => setDineInTime(e.target.value)} required />
-                  </div>
-                )}
 
                 {serviceType === 'pickup' && (
                   <div className="space-y-6 animate-fade-in pl-4 border-l border-white/10">
@@ -209,8 +269,8 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
                           type="button"
                           onClick={() => setPickupTime(option.value)}
                           className={`p-3 text-sm border transition-all duration-300 ${pickupTime === option.value
-                              ? 'bg-white text-black border-white'
-                              : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30'
+                            ? 'bg-white text-black border-white'
+                            : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30'
                             }`}
                         >
                           {option.label}
@@ -218,7 +278,15 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
                       ))}
                     </div>
                     {pickupTime === 'custom' && (
-                      <InputField value={customTime} onChange={(e: any) => setCustomTime(e.target.value)} placeholder="e.g., 45 minutes, 1 hour, 2:30 PM" required />
+                      <div className="group">
+                        <input
+                          type="text"
+                          value={customTime}
+                          onChange={(e) => setCustomTime(e.target.value)}
+                          className="w-full bg-black/40 border border-white/10 rounded-none px-4 py-3 text-white placeholder-gray-600 focus:border-white focus:ring-1 focus:ring-white transition-all duration-300"
+                          placeholder="e.g., 45 minutes, 1 hour, 2:30 PM"
+                        />
+                      </div>
                     )}
                   </div>
                 )}
@@ -236,7 +304,16 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
                         required
                       />
                     </div>
-                    <InputField label="Landmark" value={landmark} onChange={(e: any) => setLandmark(e.target.value)} placeholder="e.g., Near McDonald's" />
+                    <div className="group">
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 group-hover:text-white transition-colors">Landmark</label>
+                      <input
+                        type="text"
+                        value={landmark}
+                        onChange={(e) => setLandmark(e.target.value)}
+                        className="w-full bg-black/40 border border-white/10 rounded-none px-4 py-3 text-white placeholder-gray-600 focus:border-white focus:ring-1 focus:ring-white transition-all duration-300"
+                        placeholder="e.g., Near McDonald's"
+                      />
+                    </div>
                   </div>
                 )}
               </div>
@@ -257,8 +334,8 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
                 onClick={handleProceedToPayment}
                 disabled={!isDetailsValid}
                 className={`w-full py-4 text-sm font-bold uppercase tracking-[0.2em] transition-all duration-300 shadow-lg ${isDetailsValid
-                    ? 'bg-white text-black hover:bg-gray-200 hover:shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:scale-[1.01]'
-                    : 'bg-neutral-800 text-gray-500 cursor-not-allowed border border-white/5'
+                  ? 'bg-white text-black hover:bg-gray-200 hover:shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:scale-[1.01]'
+                  : 'bg-neutral-800 text-gray-500 cursor-not-allowed border border-white/5'
                   }`}
               >
                 Proceed to Payment
@@ -279,8 +356,8 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
                       type="button"
                       onClick={() => setPaymentMethod(method.id as PaymentMethod)}
                       className={`p-6 border transition-all duration-300 flex items-center space-x-6 group ${paymentMethod === method.id
-                          ? 'bg-white/10 border-white text-white shadow-[0_0_20px_rgba(255,255,255,0.05)]'
-                          : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:bg-white/5'
+                        ? 'bg-white/10 border-white text-white shadow-[0_0_20px_rgba(255,255,255,0.05)]'
+                        : 'bg-transparent text-gray-400 border-white/10 hover:border-white/30 hover:bg-white/5'
                         }`}
                     >
                       <span className="text-3xl filter grayscale group-hover:grayscale-0 transition-all">💳</span>
@@ -334,9 +411,10 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
 
               <button
                 onClick={handlePlaceOrder}
-                className="w-full bg-white text-black py-4 font-bold text-lg uppercase tracking-[0.15em] hover:bg-gray-200 transition-all duration-300 shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:shadow-[0_0_50px_rgba(255,255,255,0.25)] hover:scale-[1.01]"
+                disabled={isSubmitting}
+                className={`w-full py-4 font-bold text-lg uppercase tracking-[0.15em] transition-all duration-300 shadow-[0_0_30px_rgba(255,255,255,0.15)] ${isSubmitting ? 'bg-gray-400 text-gray-600 cursor-not-allowed' : 'bg-white text-black hover:bg-gray-200 hover:shadow-[0_0_50px_rgba(255,255,255,0.25)] hover:scale-[1.01]'}`}
               >
-                Place Order via Messenger
+                {isSubmitting ? 'Placing Order...' : 'Place Order via Messenger'}
               </button>
             </div>
           )}
