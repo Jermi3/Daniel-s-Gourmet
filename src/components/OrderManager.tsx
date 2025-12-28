@@ -247,7 +247,6 @@ const OrderManager: React.FC<OrderManagerProps> = ({ onBack }) => {
                                 <p className="text-gray-900 capitalize">{selectedOrder.service_type}</p>
                                 {selectedOrder.address && <p className="text-gray-600">📍 {selectedOrder.address}</p>}
                                 {selectedOrder.landmark && <p className="text-gray-500 text-sm">Landmark: {selectedOrder.landmark}</p>}
-                                {selectedOrder.party_size && <p className="text-gray-600">👥 Party of {selectedOrder.party_size}</p>}
                                 {selectedOrder.preferred_time && <p className="text-gray-600">🕐 {selectedOrder.preferred_time}</p>}
                             </div>
 

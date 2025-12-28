@@ -96,7 +96,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onOr
         const orderItems = cartItems.map(item => ({
           order_id: newOrder.id,
           item_name: item.name,
-          variation_name: item.selectedVariation?.name || null,
+          variation_name: item.selectedVariation ? `[${item.selectedVariation.code || ''}] ${item.selectedVariation.name}` : null,
           add_ons: item.selectedAddOns?.map(a => ({ name: a.name, quantity: a.quantity || 1 })) || [],
           quantity: item.quantity,
           unit_price: item.totalPrice,
