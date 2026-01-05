@@ -156,7 +156,15 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
 
     const encodedMessage = encodeURIComponent(orderDetails);
     // Use full Facebook Messenger URL for better compatibility
-    const messengerUrl = `https://www.facebook.com/messages/t/DanielsSLK?text=${encodedMessage}`;
+    const messengerUrl = `https://www.facebook.com/messages/t/DanielsSLK`;
+
+    // Copy to clipboard and redirect
+    try {
+      await navigator.clipboard.writeText(orderDetails);
+      alert("Order details copied to clipboard! Please paste them in Messenger.");
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err);
+    }
 
     // Use location.href for better Messenger redirect compatibility
     window.location.href = messengerUrl;
