@@ -216,25 +216,16 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
 
     if (isMobile) {
       // MOBILE STRATEGY: 
-      // Try iframe approach to open Messenger
+      // Show confirmation screen immediately - let user choose which link to use
+      // Page ID method as PRIMARY (works on all networks, no SSL issues)
+      // m.me as SECONDARY (auto-fill but has SSL issues on some networks)
       const messengerLink = `https://m.me/DanielsSLK?text=${encodedMessage}`;
       const fallbackLink = `fb-messenger://user-thread/111896790519879`;
 
-      // Create hidden iframe to attempt opening deep link
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.src = fallbackLink;
-      document.body.appendChild(iframe);
-
-      // Set timeout to redirect if iframe didn't work
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-        // Show confirmation screen with both options
-        setMessengerUrl(messengerLink);
-        setFallbackUrl(fallbackLink);
-        setOrderDetailsText(orderDetails);
-        setStep('confirmation');
-      }, 1500);
+      setMessengerUrl(fallbackLink);  // Primary: Page ID (reliable)
+      setFallbackUrl(messengerLink);   // Secondary: m.me (auto-fill but risky)
+      setOrderDetailsText(orderDetails);
+      setStep('confirmation');
     } else {
       // DESKTOP STRATEGY:
       // messenger.com supports pre-fill text reliably.
@@ -506,30 +497,30 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
               <h2 className="text-2xl font-bold text-white mb-4">Order Submitted!</h2>
               <p className="text-gray-400 mb-8">Your order has been saved. Please complete it by sending the details via Messenger.</p>
 
-              {/* Primary Button - Auto-fill */}
+              {/* Primary Button - Opens Messenger App (Reliable) */}
               <a
                 href={messengerUrl}
                 rel="noopener noreferrer"
                 target="_blank"
                 className="block w-full py-4 bg-blue-600 text-white font-bold text-lg uppercase tracking-wide mb-4 hover:bg-blue-700 transition-all text-center"
               >
-                📱 Open Messenger (Auto-fill)
+                📱 Open Messenger App
               </a>
 
-              <p className="text-xs text-gray-500 mb-6">Your order details will be pre-filled in Messenger</p>
+              <p className="text-xs text-gray-500 mb-6">Opens Messenger directly. Paste your order (already copied to clipboard).</p>
 
-              {/* Fallback Section */}
+              {/* Secondary - Auto-fill (may have SSL issues) */}
               <div className="border-t border-white/10 pt-6 mt-6">
-                <p className="text-sm text-gray-400 mb-4">Having trouble? Try the alternative link:</p>
+                <p className="text-sm text-gray-400 mb-4">Want auto-fill? Try this link:</p>
                 <a
                   href={fallbackUrl}
                   rel="noopener noreferrer"
                   target="_blank"
                   className="block w-full py-3 bg-transparent border border-white/30 text-white font-medium uppercase tracking-wide hover:bg-white/10 transition-all text-center text-sm"
                 >
-                  🔄 Alternative Link (Paste Required)
+                  ✨ Try Auto-fill Link
                 </a>
-                <p className="text-xs text-gray-500 mt-3">This opens Messenger directly. You'll need to paste your order (already copied to clipboard).</p>
+                <p className="text-xs text-gray-500 mt-3">Pre-fills your order, but may not work on all networks.</p>
               </div>
             </div>
 
