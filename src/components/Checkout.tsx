@@ -209,13 +209,13 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
         alert("Order details copied as backup! Opening Messenger with your order pre-filled...");
       }
 
-      // m.me with text parameter for auto-fill
-      window.location.href = `https://m.me/DanielsSLK?text=${encodedMessage}`;
+      // m.me with text parameter for auto-fill (open in new tab)
+      window.open(`https://m.me/DanielsSLK?text=${encodedMessage}`, '_blank');
     } else {
       // DESKTOP STRATEGY:
       // messenger.com supports pre-fill text reliably.
-      // -> ACTION: Redirect to messenger.com with text. Clipboard backup is silent.
-      window.location.href = `https://www.messenger.com/t/DanielsSLK?text=${encodedMessage}`;
+      // -> ACTION: Open messenger.com with text in new tab. Clipboard backup is silent.
+      window.open(`https://www.messenger.com/t/DanielsSLK?text=${encodedMessage}`, '_blank');
     }
   };
 
