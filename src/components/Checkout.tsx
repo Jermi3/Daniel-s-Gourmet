@@ -157,10 +157,8 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
     const encodedMessage = encodeURIComponent(orderDetails);
     const messengerUrl = `https://m.me/DanielsSLK?text=${encodedMessage}`;
 
-    window.open(messengerUrl, '_blank');
-
-    // Clear cart and go back to menu
-    onOrderComplete();
+    // Use location.href for better Messenger redirect compatibility
+    window.location.href = messengerUrl;
   };
 
   const isDetailsValid = customerName && contactNumber &&
