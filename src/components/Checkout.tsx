@@ -159,15 +159,41 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
     // Note: facebook.com does not support ?text= pre-fill, but we have the clipboard copy fallback
     const messengerUrl = `https://www.facebook.com/messages/t/DanielsSLK`;
 
-    // Copy to clipboard and redirect
-    try {
-      await navigator.clipboard.writeText(orderDetails);
-      alert("Order details copied to clipboard! Please paste them in Messenger.");
-    } catch (err) {
-      console.error('Failed to copy to clipboard:', err);
-    }
+    // Robust clipboard copy function
+    const copyToClipboard = async (text: string) => {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          alert("Order details copied to clipboard! Please paste them in Messenger.");
+        } else {
+          // Fallback for non-secure contexts (http) or older browsers
+          const textArea = document.createElement("textarea");
+          textArea.value = text;
+          textArea.style.position = "fixed";
+          textArea.style.left = "-9999px";
+          textArea.style.top = "0";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
 
-    // Use location.href for better Messenger redirect compatibility
+          try {
+            document.execCommand('copy');
+            alert("Order details copied to clipboard! Please paste them in Messenger.");
+          } catch (err) {
+            console.error('Fallback: Oops, unable to copy', err);
+            alert("Unable to copy order details automatically. Please check your order summary.");
+          }
+
+          document.body.removeChild(textArea);
+        }
+      } catch (err) {
+        console.error('Failed to copy to clipboard:', err);
+        alert("Unable to copy order details automatically.");
+      }
+    };
+
+    // Execute copy and redirect
+    await copyToClipboard(orderDetails);
     window.location.href = messengerUrl;
   };
 
