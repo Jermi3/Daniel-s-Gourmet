@@ -158,39 +158,43 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
     // Detect if user is on mobile
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    // Robust clipboard copy function
+    // Robust clipboard copy function with proper fallback chain
     const copyToClipboard = async (text: string): Promise<'success' | 'prompt' | 'failed'> => {
-      try {
-        if (navigator.clipboard && window.isSecureContext) {
+      // Try 1: Modern Clipboard API (if available and secure context)
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
           await navigator.clipboard.writeText(text);
           return 'success';
-        } else {
-          // Fallback for non-secure contexts (http) or older browsers
-          const textArea = document.createElement("textarea");
-          textArea.value = text;
-          textArea.style.position = "fixed";
-          textArea.style.left = "-9999px";
-          textArea.style.top = "0";
-          document.body.appendChild(textArea);
-          textArea.focus();
-          textArea.select();
+        } catch (err) {
+          console.error('Clipboard API failed:', err);
+          // Fall through to execCommand fallback
+        }
+      }
 
-          try {
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            return 'success';
-          } catch (err) {
-            console.error('Fallback: Oops, unable to copy', err);
-            document.body.removeChild(textArea);
-            // Final fallback: Show prompt for manual copy
-            window.prompt("Copy your order details manually: (Ctrl+C / Long Press)", text);
-            return 'prompt';
-          }
+      // Try 2: execCommand fallback (works on more browsers/contexts)
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        if (successful) {
+          return 'success';
         }
       } catch (err) {
-        console.error('Failed to copy to clipboard:', err);
-        return 'failed';
+        console.error('execCommand fallback failed:', err);
       }
+
+      // Try 3: Manual prompt fallback (always works)
+      window.prompt("Copy your order details manually: (Ctrl+C / Long Press)", text);
+      return 'prompt';
     };
 
     // EXECUTION LOGIC:
