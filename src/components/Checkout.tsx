@@ -13,7 +13,7 @@ interface CheckoutProps {
 
 const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onOrderComplete }) => {
   const { paymentMethods } = usePaymentMethods();
-  const [step, setStep] = useState<'details' | 'payment'>('details');
+  const [step, setStep] = useState<'details' | 'payment' | 'confirmation'>('details');
   const [customerName, setCustomerName] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [serviceType, setServiceType] = useState<ServiceType>('dine-in');
@@ -26,6 +26,9 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onOr
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('gcash');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [messengerUrl, setMessengerUrl] = useState('');
+  const [fallbackUrl, setFallbackUrl] = useState('');
+  const [orderDetailsText, setOrderDetailsText] = useState('');
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -215,14 +218,10 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
       // MOBILE STRATEGY: 
       // Use m.me with text parameter for AUTO-FILL on mobile Messenger
       // This is the only URL that supports pre-filling messages on mobile
-
-      if (copyResult === 'success') {
-        alert("Order details copied as backup! Opening Messenger with your order pre-filled...");
-      }
-
-      // Clear browser data and redirect
-      clearBrowserData();
-      window.location.href = `https://m.me/DanielsSLK?text=${encodedMessage}`;
+      setMessengerUrl(`https://m.me/DanielsSLK?text=${encodedMessage}`);
+      setFallbackUrl(`fb-messenger://user-thread/111896790519879`);
+      setOrderDetailsText(orderDetails);
+      setStep('confirmation');
     } else {
       // DESKTOP STRATEGY:
       // messenger.com supports pre-fill text reliably.
@@ -485,6 +484,44 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
                 {isSubmitting ? 'Placing Order...' : 'Place Order via Messenger'}
               </button>
             </div>
+          ) : step === 'confirmation' ? (
+          <div className="space-y-8 animate-slide-up">
+            <div className="card-premium p-8 text-center">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                <span className="text-4xl">✓</span>
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-4">Order Submitted!</h2>
+              <p className="text-gray-400 mb-8">Your order has been saved. Please complete it by sending the details via Messenger.</p>
+
+              {/* Primary Button - Auto-fill */}
+              <a
+                href={messengerUrl}
+                className="block w-full py-4 bg-blue-600 text-white font-bold text-lg uppercase tracking-wide mb-4 hover:bg-blue-700 transition-all text-center"
+              >
+                📱 Open Messenger (Auto-fill)
+              </a>
+
+              <p className="text-xs text-gray-500 mb-6">Your order details will be pre-filled in Messenger</p>
+
+              {/* Fallback Section */}
+              <div className="border-t border-white/10 pt-6 mt-6">
+                <p className="text-sm text-gray-400 mb-4">Having trouble? Try the alternative link:</p>
+                <a
+                  href={fallbackUrl}
+                  className="block w-full py-3 bg-transparent border border-white/30 text-white font-medium uppercase tracking-wide hover:bg-white/10 transition-all text-center text-sm"
+                >
+                  🔄 Alternative Link (Paste Required)
+                </a>
+                <p className="text-xs text-gray-500 mt-3">This opens Messenger directly. You'll need to paste your order (already copied to clipboard).</p>
+              </div>
+            </div>
+
+            {/* Order Reference */}
+            <div className="card-premium p-6">
+              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3">Your Order Details (Backup)</h3>
+              <pre className="text-xs text-gray-300 whitespace-pre-wrap bg-black/30 p-4 rounded max-h-48 overflow-y-auto">{orderDetailsText}</pre>
+            </div>
+          </div>
           )}
         </div>
 
