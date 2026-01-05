@@ -155,7 +155,8 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
     `.trim();
 
     const encodedMessage = encodeURIComponent(orderDetails);
-    const messengerUrl = `https://m.me/DanielsSLK?text=${encodedMessage}`;
+    // Use full Facebook Messenger URL for better compatibility
+    const messengerUrl = `https://www.facebook.com/messages/t/DanielsSLK?text=${encodedMessage}`;
 
     // Use location.href for better Messenger redirect compatibility
     window.location.href = messengerUrl;
