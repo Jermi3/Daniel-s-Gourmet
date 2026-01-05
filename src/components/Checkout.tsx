@@ -155,16 +155,15 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
     `.trim();
 
     const encodedMessage = encodeURIComponent(orderDetails);
-    // Use full Facebook Messenger URL for best stability across devices
-    // Note: facebook.com does not support ?text= pre-fill, but we have the clipboard copy fallback
-    const messengerUrl = `https://www.facebook.com/messages/t/DanielsSLK`;
+    // Detect if user is on mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     // Robust clipboard copy function
     const copyToClipboard = async (text: string) => {
       try {
         if (navigator.clipboard && window.isSecureContext) {
           await navigator.clipboard.writeText(text);
-          alert("Order details copied to clipboard! Please paste them in Messenger.");
+          return true; // Success
         } else {
           // Fallback for non-secure contexts (http) or older browsers
           const textArea = document.createElement("textarea");
@@ -178,23 +177,37 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
 
           try {
             document.execCommand('copy');
-            alert("Order details copied to clipboard! Please paste them in Messenger.");
+            document.body.removeChild(textArea);
+            return true; // Success
           } catch (err) {
             console.error('Fallback: Oops, unable to copy', err);
-            alert("Unable to copy order details automatically. Please check your order summary.");
+            document.body.removeChild(textArea);
+            return false;
           }
-
-          document.body.removeChild(textArea);
         }
       } catch (err) {
         console.error('Failed to copy to clipboard:', err);
-        alert("Unable to copy order details automatically.");
+        return false;
       }
     };
 
-    // Execute copy and redirect
+    // EXECUTION LOGIC:
     await copyToClipboard(orderDetails);
-    window.location.href = messengerUrl;
+
+    if (isMobile) {
+      // MOBILE STRATEGY: 
+      // m.me has SSL issues for some users. 
+      // messenger.com crashes mobile apps.
+      // facebook.com is stable but no pre-fill.
+      // -> ACTION: Alert user to paste, then redirect to facebook.com
+      alert("Order details copied! Opening Messenger... Please PASTE your order.");
+      window.location.href = `https://www.facebook.com/messages/t/DanielsSLK`;
+    } else {
+      // DESKTOP STRATEGY:
+      // messenger.com supports pre-fill text reliably.
+      // -> ACTION: Redirect to messenger.com with text. Clipboard backup is silent.
+      window.location.href = `https://www.messenger.com/t/DanielsSLK?text=${encodedMessage}`;
+    }
   };
 
   const isDetailsValid = customerName && contactNumber &&
