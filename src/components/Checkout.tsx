@@ -496,6 +496,8 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
               {/* Primary Button - Auto-fill */}
               <a
                 href={messengerUrl}
+                rel="noopener noreferrer"
+                target="_blank"
                 className="block w-full py-4 bg-blue-600 text-white font-bold text-lg uppercase tracking-wide mb-4 hover:bg-blue-700 transition-all text-center"
               >
                 📱 Open Messenger (Auto-fill)
@@ -508,6 +510,8 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
                 <p className="text-sm text-gray-400 mb-4">Having trouble? Try the alternative link:</p>
                 <a
                   href={fallbackUrl}
+                  rel="noopener noreferrer"
+                  target="_blank"
                   className="block w-full py-3 bg-transparent border border-white/30 text-white font-medium uppercase tracking-wide hover:bg-white/10 transition-all text-center text-sm"
                 >
                   🔄 Alternative Link (Paste Required)
