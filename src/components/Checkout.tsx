@@ -182,7 +182,9 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
           } catch (err) {
             console.error('Fallback: Oops, unable to copy', err);
             document.body.removeChild(textArea);
-            return false;
+            // Final fallback: Show prompt for manual copy
+            window.prompt("Copy your order details manually: (Ctrl+C / Long Press)", text);
+            return true; // Considered handled
           }
         }
       } catch (err) {
