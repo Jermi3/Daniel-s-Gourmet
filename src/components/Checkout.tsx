@@ -159,11 +159,11 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     // Robust clipboard copy function
-    const copyToClipboard = async (text: string) => {
+    const copyToClipboard = async (text: string): Promise<'success' | 'prompt' | 'failed'> => {
       try {
         if (navigator.clipboard && window.isSecureContext) {
           await navigator.clipboard.writeText(text);
-          return true; // Success
+          return 'success';
         } else {
           // Fallback for non-secure contexts (http) or older browsers
           const textArea = document.createElement("textarea");
@@ -178,30 +178,35 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
           try {
             document.execCommand('copy');
             document.body.removeChild(textArea);
-            return true; // Success
+            return 'success';
           } catch (err) {
             console.error('Fallback: Oops, unable to copy', err);
             document.body.removeChild(textArea);
             // Final fallback: Show prompt for manual copy
             window.prompt("Copy your order details manually: (Ctrl+C / Long Press)", text);
-            return true; // Considered handled
+            return 'prompt';
           }
         }
       } catch (err) {
         console.error('Failed to copy to clipboard:', err);
-        return false;
+        return 'failed';
       }
     };
 
     // EXECUTION LOGIC:
-    await copyToClipboard(orderDetails);
+    const copyResult = await copyToClipboard(orderDetails);
 
     if (isMobile) {
       // MOBILE STRATEGY: 
       // Use numeric Page ID for deep linking
       const pageId = "111896790519879";
 
-      alert("Order details copied! Opening Messenger App... Please PASTE your order.");
+      // Only show alert if auto-copy succeeded; prompt already notified user
+      if (copyResult === 'success') {
+        alert("Order details copied! Opening Messenger App... Please PASTE your order.");
+      } else if (copyResult === 'failed') {
+        alert("Could not auto-copy. Please check your order summary before continuing.");
+      }
 
       // Attempt to open Messenger App directly
       // This URI scheme works best with numeric Page IDs
