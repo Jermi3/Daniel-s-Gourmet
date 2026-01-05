@@ -202,25 +202,15 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
 
     if (isMobile) {
       // MOBILE STRATEGY: 
-      // Use numeric Page ID for deep linking
-      const pageId = "111896790519879";
+      // Use m.me with text parameter for AUTO-FILL on mobile Messenger
+      // This is the only URL that supports pre-filling messages on mobile
 
-      // Only show alert if auto-copy succeeded; prompt already notified user
       if (copyResult === 'success') {
-        alert("Order details copied! Opening Messenger App... Please PASTE your order.");
-      } else if (copyResult === 'failed') {
-        alert("Could not auto-copy. Please check your order summary before continuing.");
+        alert("Order details copied as backup! Opening Messenger with your order pre-filled...");
       }
 
-      // Attempt to open Messenger App directly
-      // This URI scheme works best with numeric Page IDs
-      window.location.href = `fb-messenger://user-thread/${pageId}`;
-
-      // Fallback to web if app doesn't open (standard fallback pattern)
-      setTimeout(() => {
-        window.location.href = `https://www.facebook.com/messages/t/${pageId}`;
-      }, 2000);
-
+      // m.me with text parameter for auto-fill
+      window.location.href = `https://m.me/DanielsSLK?text=${encodedMessage}`;
     } else {
       // DESKTOP STRATEGY:
       // messenger.com supports pre-fill text reliably.
