@@ -196,12 +196,20 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
 
     if (isMobile) {
       // MOBILE STRATEGY: 
-      // m.me has SSL issues for some users. 
-      // messenger.com crashes mobile apps.
-      // facebook.com is stable but no pre-fill.
-      // -> ACTION: Alert user to paste, then redirect to facebook.com
-      alert("Order details copied! Opening Messenger... Please PASTE your order.");
-      window.location.href = `https://www.facebook.com/messages/t/DanielsSLK`;
+      // Use numeric Page ID for deep linking
+      const pageId = "111896790519879";
+
+      alert("Order details copied! Opening Messenger App... Please PASTE your order.");
+
+      // Attempt to open Messenger App directly
+      // This URI scheme works best with numeric Page IDs
+      window.location.href = `fb-messenger://user-thread/${pageId}`;
+
+      // Fallback to web if app doesn't open (standard fallback pattern)
+      setTimeout(() => {
+        window.location.href = `https://www.facebook.com/messages/t/${pageId}`;
+      }, 2000);
+
     } else {
       // DESKTOP STRATEGY:
       // messenger.com supports pre-fill text reliably.
