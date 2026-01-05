@@ -216,12 +216,25 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
 
     if (isMobile) {
       // MOBILE STRATEGY: 
-      // Use m.me with text parameter for AUTO-FILL on mobile Messenger
-      // This is the only URL that supports pre-filling messages on mobile
-      setMessengerUrl(`https://m.me/DanielsSLK?text=${encodedMessage}`);
-      setFallbackUrl(`fb-messenger://user-thread/111896790519879`);
-      setOrderDetailsText(orderDetails);
-      setStep('confirmation');
+      // Try iframe approach to open Messenger
+      const messengerLink = `https://m.me/DanielsSLK?text=${encodedMessage}`;
+      const fallbackLink = `fb-messenger://user-thread/111896790519879`;
+
+      // Create hidden iframe to attempt opening deep link
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = fallbackLink;
+      document.body.appendChild(iframe);
+
+      // Set timeout to redirect if iframe didn't work
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+        // Show confirmation screen with both options
+        setMessengerUrl(messengerLink);
+        setFallbackUrl(fallbackLink);
+        setOrderDetailsText(orderDetails);
+        setStep('confirmation');
+      }, 1500);
     } else {
       // DESKTOP STRATEGY:
       // messenger.com supports pre-fill text reliably.
