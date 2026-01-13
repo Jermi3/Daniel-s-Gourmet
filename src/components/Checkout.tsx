@@ -115,7 +115,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) =>
         }
 
         // Send to Google Sheets for backup recording
-        const GOOGLE_SHEETS_URL = import.meta.env.VITE_GOOGLE_SHEETS_URL;
+        const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbzIPTUHG_MRpXXzQf3EYc-GEcoHmFFGghabwUqiCS8g2tlEvHoonjNb_E0lV3BNQDY/exec";
         if (GOOGLE_SHEETS_URL) {
           try {
             const payload = {
