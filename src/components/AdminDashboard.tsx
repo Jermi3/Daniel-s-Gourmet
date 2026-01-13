@@ -3,7 +3,7 @@ import { Plus, Edit, Trash2, Save, X, ArrowLeft, Coffee, TrendingUp, Package, Us
 import { MenuItem, Variation, AddOn } from '../types';
 import { addOnCategories } from '../data/menuData';
 import { useMenu } from '../hooks/useMenu';
-import { useCategories, Category } from '../hooks/useCategories';
+import { useCategories } from '../hooks/useCategories';
 import ImageUpload from './ImageUpload';
 import CategoryManager from './CategoryManager';
 import PaymentMethodManager from './PaymentMethodManager';
@@ -61,7 +61,7 @@ const AdminDashboard: React.FC = () => {
       try {
         setIsProcessing(true);
         await deleteMenuItem(id);
-      } catch (error) {
+      } catch {
         alert('Failed to delete item. Please try again.');
       } finally {
         setIsProcessing(false);
@@ -122,7 +122,7 @@ const AdminDashboard: React.FC = () => {
         setSelectedItems([]);
         setShowBulkActions(false);
         alert(`Successfully deleted ${selectedItems.length} item(s).`);
-      } catch (error) {
+      } catch {
         alert('Failed to delete some items. Please try again.');
       } finally {
         setIsProcessing(false);
@@ -149,7 +149,7 @@ const AdminDashboard: React.FC = () => {
         setSelectedItems([]);
         setShowBulkActions(false);
         alert(`Successfully updated category for ${selectedItems.length} item(s)`);
-      } catch (error) {
+      } catch {
         alert('Failed to update some items');
       } finally {
         setIsProcessing(false);

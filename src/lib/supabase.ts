@@ -111,6 +111,7 @@ export type Database = {
           menu_item_id?: string;
           name?: string;
           price?: number;
+          code?: string;
           created_at?: string;
         };
       };

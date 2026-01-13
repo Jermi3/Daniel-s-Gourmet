@@ -42,7 +42,7 @@ const OrderManager: React.FC<OrderManagerProps> = ({ onBack }) => {
             if (selectedOrder?.id === orderId) {
                 setSelectedOrder(prev => prev ? { ...prev, status: newStatus } : null);
             }
-        } catch (error) {
+        } catch {
             alert('Failed to update order status');
         } finally {
             setIsUpdating(false);

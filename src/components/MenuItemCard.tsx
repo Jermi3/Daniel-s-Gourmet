@@ -257,7 +257,10 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
                           className="peer sr-only"
                         />
                         <div className="flex items-center justify-between p-4 border border-white/10 bg-white/5 hover:bg-white/10 peer-checked:bg-[#D4AF37] peer-checked:border-[#D4AF37] peer-checked:text-black transition-all duration-300">
-                          <span className="font-medium group-hover:translate-x-1 transition-transform font-sans">{variation.name}</span>
+                          <span className="font-medium group-hover:translate-x-1 transition-transform font-sans">
+                            {variation.name}
+                            {variation.code && <span className="text-xs text-gray-500 ml-2">[{variation.code}]</span>}
+                          </span>
                           <span className="font-bold font-sans">
                             ₱{variation.price.toFixed(2)}
                           </span>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Save, X, ArrowLeft, CreditCard, Upload } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, ArrowLeft, CreditCard } from 'lucide-react';
 import { usePaymentMethods, PaymentMethod } from '../hooks/usePaymentMethods';
 import ImageUpload from './ImageUpload';
 
@@ -23,7 +23,7 @@ const PaymentMethodManager: React.FC<PaymentMethodManagerProps> = ({ onBack }) =
 
   React.useEffect(() => {
     refetchAll();
-  }, []);
+  }, [refetchAll]);
 
   const handleAddMethod = () => {
     const nextSortOrder = Math.max(...paymentMethods.map(m => m.sort_order), 0) + 1;

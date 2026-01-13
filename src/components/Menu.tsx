@@ -1,5 +1,5 @@
 import React from 'react';
-import { MenuItem, CartItem } from '../types';
+import { MenuItem, CartItem, Variation, AddOn } from '../types';
 import { useCategories } from '../hooks/useCategories';
 import MenuItemCard from './MenuItemCard';
 import MobileNav from './MobileNav';
@@ -16,7 +16,7 @@ const preloadImages = (items: MenuItem[]) => {
 
 interface MenuProps {
   menuItems: MenuItem[];
-  addToCart: (item: MenuItem, quantity?: number, variation?: any, addOns?: any[]) => void;
+  addToCart: (item: MenuItem, quantity?: number, variation?: Variation, addOns?: AddOn[]) => void;
   cartItems: CartItem[];
   updateQuantity: (id: string, quantity: number) => void;
 }
@@ -82,7 +82,7 @@ const Menu: React.FC<MenuProps> = ({ menuItems, addToCart, cartItems, updateQuan
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [categories]);
 
 
   return (

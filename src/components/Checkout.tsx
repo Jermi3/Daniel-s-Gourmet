@@ -11,7 +11,7 @@ interface CheckoutProps {
   onOrderComplete: () => void;
 }
 
-const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onOrderComplete }) => {
+const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack }) => {
   const { paymentMethods } = usePaymentMethods();
   const [step, setStep] = useState<'details' | 'payment' | 'confirmation'>('details');
   const [customerName, setCustomerName] = useState('');
@@ -21,8 +21,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onOr
   const [landmark, setLandmark] = useState('');
   const [pickupTime, setPickupTime] = useState('5-10');
   const [customTime, setCustomTime] = useState('');
-  const [partySize, setPartySize] = useState(1);
-  const [dineInTime, setDineInTime] = useState('');
+  const [partySize] = useState(1);
+  const [dineInTime] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('gcash');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -113,6 +113,43 @@ const Checkout: React.FC<CheckoutProps> = ({ cartItems, totalPrice, onBack, onOr
         if (itemsError) {
           console.error('Error saving order items:', itemsError);
         }
+
+        // Send to Google Sheets for backup recording
+        const GOOGLE_SHEETS_URL = import.meta.env.VITE_GOOGLE_SHEETS_URL;
+        if (GOOGLE_SHEETS_URL) {
+          try {
+            const payload = {
+              customerName,
+              contactNumber,
+              serviceType,
+              address: serviceType === 'delivery' ? address : '',
+              landmark: serviceType === 'delivery' ? landmark : '',
+              paymentMethod: selectedPaymentMethod?.name || paymentMethod,
+              items: cartItems.map(item => ({
+                name: item.name,
+                code: item.selectedVariation?.code,
+                variation: item.selectedVariation?.name,
+                addOns: item.selectedAddOns?.map(a => a.name).join(', '),
+                quantity: item.quantity,
+                totalPrice: item.totalPrice * item.quantity
+              })),
+              total: totalPrice,
+              notes
+            };
+
+            console.log('Sending to Sheets:', payload);
+
+            await fetch(GOOGLE_SHEETS_URL, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+          } catch (sheetErr) {
+            console.error('Google Sheets sync failed:', sheetErr);
+            // Silent fail - don't block order
+          }
+        }
       }
     } catch (err) {
       console.error('Error saving order to database:', err);
@@ -201,7 +238,7 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
     };
 
     // EXECUTION LOGIC:
-    const copyResult = await copyToClipboard(orderDetails);
+    await copyToClipboard(orderDetails);
 
     // Clear cookies and storage before redirect
     const clearBrowserData = () => {
@@ -412,7 +449,7 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
                 Proceed to Payment
               </button>
             </div>
-          ) : (
+          ) : step === 'payment' ? (
             <div className="space-y-8 animate-slide-up">
               <div className="card-premium p-8">
                 <h2 className="text-xl font-light text-white uppercase tracking-widest mb-8 flex items-center">
@@ -489,48 +526,48 @@ Please confirm this order to proceed. Thank you for choosing Daniel's! ☕
               </button>
             </div>
           ) : step === 'confirmation' ? (
-          <div className="space-y-8 animate-slide-up">
-            <div className="card-premium p-8 text-center">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/20 flex items-center justify-center">
-                <span className="text-4xl">✓</span>
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-4">Order Submitted!</h2>
-              <p className="text-gray-400 mb-8">Your order has been saved. Please complete it by sending the details via Messenger.</p>
+            <div className="space-y-8 animate-slide-up">
+              <div className="card-premium p-8 text-center">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <span className="text-4xl">✓</span>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-4">Order Submitted!</h2>
+                <p className="text-gray-400 mb-8">Your order has been saved. Please complete it by sending the details via Messenger.</p>
 
-              {/* Primary Button - Opens Messenger App (Reliable) */}
-              <a
-                href={messengerUrl}
-                rel="noopener noreferrer"
-                target="_blank"
-                className="block w-full py-4 bg-blue-600 text-white font-bold text-lg uppercase tracking-wide mb-4 hover:bg-blue-700 transition-all text-center"
-              >
-                📱 Open Messenger App
-              </a>
-
-              <p className="text-xs text-gray-500 mb-6">Opens Messenger directly. Paste your order (already copied to clipboard).</p>
-
-              {/* Secondary - Auto-fill (may have SSL issues) */}
-              <div className="border-t border-white/10 pt-6 mt-6">
-                <p className="text-sm text-gray-400 mb-4">Want auto-fill? Try this link:</p>
+                {/* Primary Button - Opens Messenger App (Reliable) */}
                 <a
-                  href={fallbackUrl}
+                  href={messengerUrl}
                   rel="noopener noreferrer"
                   target="_blank"
-                  className="block w-full py-3 bg-transparent border border-white/30 text-white font-medium uppercase tracking-wide hover:bg-white/10 transition-all text-center text-sm"
+                  className="block w-full py-4 bg-blue-600 text-white font-bold text-lg uppercase tracking-wide mb-4 hover:bg-blue-700 transition-all text-center"
                 >
-                  ✨ Try Auto-fill Link
+                  📱 Open Messenger App
                 </a>
-                <p className="text-xs text-gray-500 mt-3">Pre-fills your order, but may not work on all networks.</p>
+
+                <p className="text-xs text-gray-500 mb-6">Opens Messenger directly. Paste your order (already copied to clipboard).</p>
+
+                {/* Secondary - Auto-fill (may have SSL issues) */}
+                <div className="border-t border-white/10 pt-6 mt-6">
+                  <p className="text-sm text-gray-400 mb-4">Want auto-fill? Try this link:</p>
+                  <a
+                    href={fallbackUrl}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                    className="block w-full py-3 bg-transparent border border-white/30 text-white font-medium uppercase tracking-wide hover:bg-white/10 transition-all text-center text-sm"
+                  >
+                    ✨ Try Auto-fill Link
+                  </a>
+                  <p className="text-xs text-gray-500 mt-3">Pre-fills your order, but may not work on all networks.</p>
+                </div>
+              </div>
+
+              {/* Order Reference */}
+              <div className="card-premium p-6">
+                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3">Your Order Details (Backup)</h3>
+                <pre className="text-xs text-gray-300 whitespace-pre-wrap bg-black/30 p-4 rounded max-h-48 overflow-y-auto">{orderDetailsText}</pre>
               </div>
             </div>
-
-            {/* Order Reference */}
-            <div className="card-premium p-6">
-              <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wide mb-3">Your Order Details (Backup)</h3>
-              <pre className="text-xs text-gray-300 whitespace-pre-wrap bg-black/30 p-4 rounded max-h-48 overflow-y-auto">{orderDetailsText}</pre>
-            </div>
-          </div>
-          )}
+          ) : null}
         </div>
 
         {/* Sidebar Summary */}

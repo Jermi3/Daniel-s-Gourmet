@@ -2,6 +2,7 @@ export interface Variation {
   id: string;
   name: string;
   price: number;
+  code?: string;
 }
 
 export interface AddOn {

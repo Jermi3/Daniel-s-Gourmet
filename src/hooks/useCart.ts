@@ -58,6 +58,10 @@ export const useCart = () => {
     });
   }, []);
 
+  const removeFromCart = useCallback((id: string) => {
+    setCartItems(prev => prev.filter(item => item.id !== id));
+  }, []);
+
   const updateQuantity = useCallback((id: string, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(id);
@@ -69,11 +73,7 @@ export const useCart = () => {
         item.id === id ? { ...item, quantity } : item
       )
     );
-  }, []);
-
-  const removeFromCart = useCallback((id: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== id));
-  }, []);
+  }, [removeFromCart]);
 
   const clearCart = useCallback(() => {
     setCartItems([]);
